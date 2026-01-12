@@ -76,7 +76,7 @@
 
   <script>
     // 【重要】あなたのGASウェブアプリURLに書き換えてください
-    const GAS_URL = "https://script.google.com/macros/s/XXXXX/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec"; 
 
     let allData = [];
     let calendar;
