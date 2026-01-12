@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png?v=500">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png?v=500">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png?v=500">
+  <meta name="apple-mobile-web-app-title" content="点呼システム">
   
-  <link rel="apple-touch-icon" href="naniwa_icon_v1.png">
-  <link rel="icon" type="image/png" href="naniwa_icon_v1.png">
-  
-  <title>なにわ管理 点呼システム</title>
-
   <style>
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
     .container { width: 100%; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; padding-bottom: 150px; }
@@ -17,76 +16,48 @@
     select, input, textarea, .btn { display: block; width: 90%; margin: 10px auto; padding: 16px 12px; font-size: 18px !important; border-radius: 12px; border: 2px solid #333; background-color: #1a1a1a; color: #fff; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
     select { height: 60px; background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'); background-repeat: no-repeat; background-position: right 15px center; background-size: 20px; }
     textarea { height: 100px; resize: none; }
-    .btn { font-size: 22px; font-weight: bold; border: none; cursor: pointer; text-align: center; justify-content: center; display: flex; align-items: center; text-decoration: none; }
-    #submitBtn { background: linear-gradient(135deg, #ff0000 0%, #990000 100%); margin-top: 15px; width: 90%; }
+    .btn { font-size: 22px; font-weight: bold; border: none; cursor: pointer; text-align: center; justify-content: center; display: flex; align-items: center; }
+    #submitBtn { background: linear-gradient(135deg, #ff0000 0%, #990000 100%); margin-top: 15px; }
     #submitBtn:disabled { background: #555 !important; opacity: 0.6; }
-    #contactLink { background: #333; font-size: 16px; margin-top: 20px; border: 1px solid #555; width: 90%; }
     .label { width: 90%; text-align: left; font-size: 14px; color: #aaa; margin-top: 8px; font-weight: bold; }
     .timestamp { margin: 10px 0; font-size: 18px; color: #ccc; }
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
     .confirm-box { width: 85%; background: #222; padding: 20px; border-radius: 20px; border: 2px solid red; }
     .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-yes { background: red; flex: 1; padding: 15px; border-radius: 10px; color: #fff; font-weight: bold; border: none; font-size: 18px; }
-    .btn-no { background: #555; flex: 1; padding: 15px; border-radius: 10px; color: #fff; border: none; font-size: 18px; }
+    .btn-yes { background: red; flex: 1; padding: 15px; border-radius: 10px; color: #fff; font-weight: bold; border: none; }
+    .btn-no { background: #555; flex: 1; padding: 15px; border-radius: 10px; color: #fff; border: none; }
   </style>
 </head>
 <body>
   <div class="container">
-    <img class="header-image" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg" alt="HEAD LOGO">
-    
-    <div class="label">店舗を選択</div>
-    <select id="store"><option value="" disabled selected>読み込み中...</option></select>
-    
-    <div class="label">担当者を選択</div>
-    <select id="staff"><option value="" disabled selected>読み込み中...</option></select>
+    <img class="header-image" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg">
+    <div class="label">店舗</div>
+    <select id="store"><option value="" disabled selected>選択してください</option></select>
+    <div class="label">担当者</div>
+    <select id="staff"><option value="" disabled selected>選択してください</option></select>
     <input id="staffOther" type="text" placeholder="名前を手入力" style="display:none;">
-    
-    <div class="label">連絡先（数字のみ）</div>
+    <div class="label">連絡先</div>
     <input id="phone" type="tel" placeholder="09012345678" inputmode="tel">
-    
     <div class="label">備考</div>
     <textarea id="notes" placeholder="伝達事項があれば記入"></textarea>
-    
     <div class="timestamp" id="timestamp">--:--:--</div>
-    
     <button id="submitBtn" class="btn">出庫を記録する</button>
-    <a href="tel:08040821925" id="contactLink" class="btn">📞 担当者に連絡</a>
   </div>
 
-  <div class="overlay" id="confirmOverlay">
-    <div class="confirm-box">
-      <div style="color:red; font-size:22px; font-weight:bold; text-align:center;">送信確認</div>
-      <div id="confirmContent" style="margin: 20px 0; line-height: 1.6; font-size: 18px;"></div>
-      <div class="btn-row">
-        <button class="btn-no" onclick="document.getElementById('confirmOverlay').style.display='none'">修正</button>
-        <button class="btn-yes" id="finalSubmit">OK</button>
-      </div>
+  <div class="overlay" id="confirmOverlay"><div class="confirm-box">
+    <div style="color:red; font-size:22px; font-weight:bold; text-align:center;">送信確認</div>
+    <div id="confirmContent" style="margin: 20px 0; line-height: 1.6; font-size: 18px;"></div>
+    <div class="btn-row">
+      <button class="btn-no" onclick="document.getElementById('confirmOverlay').style.display='none'">修正</button>
+      <button class="btn-yes" id="finalSubmit">OK</button>
     </div>
-  </div>
-
-  <div class="overlay" id="resultOverlay">
-    <div style="font-size:30px; color:red; font-weight:bold;">送信完了</div>
-  </div>
+  </div></div>
+  <div class="overlay" id="resultOverlay"><div style="font-size:30px; color:red; font-weight:bold;">送信完了</div></div>
 
   <script>
-    // 提供されたURLを使用
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec"; 
-
     let staffMaster = [];
-
     function updateTime() { document.getElementById("timestamp").textContent = new Date().toLocaleString('ja-JP'); }
     setInterval(updateTime, 1000); updateTime();
-
-    async function loadMasterData() {
-      try {
-        const response = await fetch(`${GAS_URL}?action=getMaster`);
-        const data = await response.json();
-        refreshUI(data);
-      } catch (e) {
-        console.error("Fetch Error:", e);
-        alert("データの読み込みに失敗しました。シークレットモードでお試しください。");
-      }
-    }
 
     function refreshUI(data) {
       if(!data || data.error) return;
@@ -99,7 +70,7 @@
       fSel.add(new Option("その他(入力)", "その他(入力)"));
     }
 
-    window.onload = loadMasterData;
+    window.onload = () => google.script.run.withSuccessHandler(refreshUI).getMasterData();
 
     document.getElementById("staff").addEventListener("change", e => {
       const other = document.getElementById("staffOther"), phoneInput = document.getElementById("phone");
@@ -121,44 +92,25 @@
       document.getElementById("confirmOverlay").style.display = "flex";
     });
 
-    document.getElementById("finalSubmit").addEventListener("click", async function() {
+    document.getElementById("finalSubmit").addEventListener("click", function() {
       const btn = this; if(btn.disabled) return;
       btn.disabled = true; btn.innerHTML = "送信中...";
-      
-      const store = document.getElementById("store").value, 
-            phone = document.getElementById("phone").value.trim(), 
-            notes = document.getElementById("notes").value.trim();
+      const store = document.getElementById("store").value, phone = document.getElementById("phone").value.trim(), notes = document.getElementById("notes").value.trim();
       let staff = document.getElementById("staff").value;
       if(staff === "その他(入力)") staff = document.getElementById("staffOther").value.trim();
-
-      try {
-        const response = await fetch(GAS_URL, {
-          method: "POST",
-          body: JSON.stringify({ action: "submit", record: { store, staff, phone, notes } })
-        });
-        const res = await response.json();
-
+      google.script.run.withSuccessHandler((res) => {
         if (res.success) {
           document.getElementById("confirmOverlay").style.display = "none";
           document.getElementById("resultOverlay").style.display = "flex";
           setTimeout(() => {
             document.getElementById("resultOverlay").style.display = "none";
-            document.getElementById("staffOther").value = ""; 
-            document.getElementById("phone").value = ""; 
-            document.getElementById("notes").value = "";
-            document.getElementById("store").selectedIndex = 0; 
-            document.getElementById("staff").selectedIndex = 0;
+            document.getElementById("staffOther").value = ""; document.getElementById("phone").value = ""; document.getElementById("notes").value = "";
+            document.getElementById("store").selectedIndex = 0; document.getElementById("staff").selectedIndex = 0;
             if(res.newData) refreshUI(res.newData);
             btn.disabled = false; btn.innerHTML = "OK";
           }, 2000);
-        } else {
-          alert("エラー: " + res.error);
-          btn.disabled = false; btn.innerHTML = "OK";
-        }
-      } catch (e) {
-        alert("通信失敗。GASのURLを再確認してください。");
-        btn.disabled = false; btn.innerHTML = "OK";
-      }
+        } else { alert("エラー: " + res.error); btn.disabled = false; btn.innerHTML = "OK"; }
+      }).submitData({store, staff, phone, notes});
     });
   </script>
 </body>
