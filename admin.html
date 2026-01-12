@@ -6,13 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
   <link rel="apple-touch-icon" href="naniwa_icon_v1.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="naniwa_icon_v1.png">
   <link rel="icon" type="image/png" href="naniwa_icon_v1.png">
 
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
   
-  <title>点呼管理システム</title>
+  <title>点呼管理</title>
 
   <style>
     :root { --neon-red: #ff003c; --bg-black: #050505; --card-bg: #111; }
@@ -20,34 +19,21 @@
     #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .pw-input { padding: 18px; font-size: 24px; width: 80%; max-width: 320px; background: #111; border: 2px solid var(--neon-red); color: #fff; text-align: center; border-radius: 12px; margin-bottom: 25px; outline: none; }
     .pw-btn { padding: 18px 60px; background: var(--neon-red); color: #fff; border: none; border-radius: 40px; font-weight: bold; font-size: 20px; box-shadow: 0 0 20px var(--neon-red); cursor: pointer; }
-    .pw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    
     #main-content { display: none; padding-bottom: 120px; }
     .header-area { width: 100%; text-align: center; padding: 15px 0; border-bottom: 1px solid #222; background: #000; }
-    .header-img { height: 50px; width: auto; filter: drop-shadow(0 0 8px rgba(255, 0, 60, 0.5)); }
+    .header-img { height: 50px; width: auto; }
     .container { padding: 15px; }
-    h2 { font-size: 15px; color: var(--neon-red); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 8px var(--neon-red); margin: 20px 0; text-align: center; }
+    h2 { font-size: 15px; color: var(--neon-red); text-transform: uppercase; letter-spacing: 2px; margin: 20px 0; text-align: center; }
     .history-card { background: var(--card-bg); border-left: 4px solid var(--neon-red); margin-bottom: 15px; padding: 15px; border-radius: 8px; }
     .card-row { display: flex; justify-content: space-between; align-items: center; }
-    .store-name { font-size: 18px; font-weight: bold; color: #fff; }
+    .store-name { font-size: 18px; font-weight: bold; }
     .time-value { font-size: 20px; color: var(--neon-red); font-weight: bold; }
-    .staff-name { font-size: 16px; color: #ccc; margin: 10px 0; }
-    .contact-area { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #222; padding-top: 10px; margin-top: 10px; }
-    .call-btn { border: 1px solid var(--neon-red); color: var(--neon-red); text-decoration: none; padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; }
-    
     .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.9); border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
     .nav-item { color: #666; text-align: center; font-size: 10px; flex: 1; cursor: pointer; }
-    .nav-item.active { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
-    .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
-    
+    .nav-item.active { color: var(--neon-red); }
     .view-section { display: none; }
     .view-section.active { display: block; }
-    select { width: 100%; height: 50px; padding: 0 15px; background: #222; color: #fff; border: 1px solid #444; border-radius: 10px; font-size: 16px; margin-bottom: 20px; -webkit-appearance: none; }
-    
-    /* カレンダーの色調整 */
-    .fc { background: #111; padding: 10px; border-radius: 10px; }
-    .fc-toolbar-title { font-size: 1.2em !important; }
-    .fc-daygrid-day-number { color: #fff; }
+    select { width: 100%; height: 50px; background: #222; color: #fff; border: 1px solid #444; border-radius: 10px; margin-bottom: 20px; }
   </style>
 </head>
 <body>
@@ -67,52 +53,38 @@
     </div>
 
     <div class="nav-bar">
-      <div class="nav-item active" id="nav-list" onclick="switchView('list')"><span class="nav-icon">📋</span>一覧</div>
-      <div class="nav-item" id="nav-cal" onclick="switchView('cal')"><span class="nav-icon">📅</span>月間</div>
-      <div class="nav-item" id="nav-staff" onclick="switchView('staff')"><span class="nav-icon">👤</span>担当</div>
-      <div class="nav-item" id="nav-store" onclick="switchView('store')"><span class="nav-icon">🏪</span>店舗</div>
+      <div class="nav-item active" id="nav-list" onclick="switchView('list')">📋一覧</div>
+      <div class="nav-item" id="nav-cal" onclick="switchView('cal')">📅月間</div>
+      <div class="nav-item" id="nav-staff" onclick="switchView('staff')">👤担当</div>
+      <div class="nav-item" id="nav-store" onclick="switchView('store')">🏪店舗</div>
     </div>
   </div>
 
   <script>
-    // 【重要】あなたのGASウェブアプリURLに書き換えてください
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec"; 
 
     let allData = [];
     let calendar;
 
-    // 認証チェック（fetchを使用）
     async function checkAuth() {
       const pw = document.getElementById('admin-pw').value;
-      const btn = document.querySelector('.pw-btn');
-      btn.disabled = true; btn.innerHTML = "認証中...";
-
       try {
         const response = await fetch(`${GAS_URL}?action=getHistory&pass=${pw}`);
         const data = await response.json();
-
-        if (data.error === "AUTH_FAILED") {
-          alert("認証失敗"); btn.disabled = false; btn.innerHTML = "LOGIN";
-        } else if (data && !data.error) {
+        if (data.error === "AUTH_FAILED") { alert("認証失敗"); }
+        else {
           allData = data.history || [];
           document.getElementById('auth-screen').style.display = 'none';
           document.getElementById('main-content').style.display = 'block';
           setupFilters(data.allStores, data.allStaff);
           renderList();
           initCalendar();
-        } else {
-          alert("エラー: " + (data.error || "不明なエラー"));
-          btn.disabled = false; btn.innerHTML = "LOGIN";
         }
-      } catch (err) {
-        alert("通信失敗: " + err);
-        btn.disabled = false; btn.innerHTML = "LOGIN";
-      }
+      } catch (err) { alert("通信失敗"); }
     }
 
     function setupFilters(stores, staffList) {
-      const sS = document.getElementById('f-store-sel');
-      const fS = document.getElementById('f-staff-sel');
+      const sS = document.getElementById('f-store-sel'), fS = document.getElementById('f-staff-sel');
       sS.innerHTML = '<option value="">店舗を選択</option>';
       fS.innerHTML = '<option value="">担当者を選択</option>';
       if (stores) stores.forEach(s => sS.add(new Option(s, s)));
@@ -120,55 +92,32 @@
     }
 
     function createCard(item) {
-      const d = new Date(item.date);
-      const tS = d.toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
-      const phoneClean = item.phone ? item.phone.toString().replace(/['\s-]/g, '') : "";
+      const d = new Date(item.date), tS = d.toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
       const card = document.createElement('div'); card.className = 'history-card';
-      card.innerHTML = `
-        <div class="card-row"><div class="store-name">${item.store}</div><div class="time-value">${tS}</div></div>
-        <div class="staff-name">担当者: ${item.staff}</div>
-        <div class="contact-area"><span>📞 ${phoneClean}</span>${phoneClean ? `<a href="tel:${phoneClean}" class="call-btn">発信</a>` : ''}</div>
-        ${item.notes ? `<div style="background:#1a1a1a;padding:8px;border-radius:5px;margin-top:10px;font-size:13px;color:#bbb;">${item.notes}</div>` : ''}
-      `;
+      card.innerHTML = `<div class="card-row"><div class="store-name">${item.store}</div><div class="time-value">${tS}</div></div><div>担当: ${item.staff}</div>`;
       return card;
     }
 
     function renderList(targetDateStr = null) {
       const fDate = targetDateStr || new Date().toLocaleDateString('ja-JP');
-      document.getElementById('list-title').innerText = fDate + " Records";
       const c = document.getElementById('list-contents'); c.innerHTML = '';
-      const filtered = allData.filter(d => new Date(d.date).toLocaleDateString('ja-JP') === fDate);
-      if (filtered.length === 0) c.innerHTML = '<p style="text-align:center;color:#555;">記録なし</p>';
-      else filtered.forEach(item => c.appendChild(createCard(item)));
+      allData.filter(d => new Date(d.date).toLocaleDateString('ja-JP') === fDate).forEach(item => c.appendChild(createCard(item)));
     }
 
     function applyStaffFilter() {
-      const v = document.getElementById('f-staff-sel').value;
-      const c = document.getElementById('staff-res'); c.innerHTML = '';
-      allData.filter(d => d.staff === v).forEach(item => c.appendChild(createCard(item)));
+      const v = document.getElementById('f-staff-sel').value, c = document.getElementById('staff-res');
+      c.innerHTML = ''; allData.filter(d => d.staff === v).forEach(item => c.appendChild(createCard(item)));
     }
 
     function applyStoreFilter() {
-      const v = document.getElementById('f-store-sel').value;
-      const c = document.getElementById('store-res'); c.innerHTML = '';
-      allData.filter(d => d.store === v).forEach(item => c.appendChild(createCard(item)));
+      const v = document.getElementById('f-store-sel').value, c = document.getElementById('store-res');
+      c.innerHTML = ''; allData.filter(d => d.store === v).forEach(item => c.appendChild(createCard(item)));
     }
 
     function initCalendar() {
-      const counts = {}; 
-      allData.forEach(d => { 
-        const s = new Date(d.date).toLocaleDateString('ja-JP').replace(/\//g, '-'); 
-        counts[s] = (counts[s] || 0) + 1; 
-      });
-      const events = Object.keys(counts).map(s => ({ title: `計${counts[s]}件`, start: s, allDay: true }));
-      
       calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth', locale: 'ja', height: 'auto', events,
-        dateClick: (info) => { 
-          const clickedDate = new Date(info.date).toLocaleDateString('ja-JP');
-          renderList(clickedDate); 
-          switchView('list'); 
-        }
+        initialView: 'dayGridMonth', locale: 'ja', height: 'auto',
+        dateClick: (info) => { renderList(info.date.toLocaleDateString('ja-JP')); switchView('list'); }
       });
       calendar.render();
     }
