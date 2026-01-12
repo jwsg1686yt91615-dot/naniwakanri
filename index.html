@@ -1,87 +1,174 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>なにわ管理</title>
-    
-    <link rel="apple-touch-icon" href="naniwa_icon_v1.png">
-    <link rel="icon" type="image/png" href="naniwa_icon_v1.png">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <link rel="apple-touch-icon" href="naniwa_icon_v1.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="naniwa_icon_v1.png">
+  <link rel="icon" type="image/png" href="naniwa_icon_v1.png">
+  
+  <title>点呼システム</title>
 
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f5f5f7;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            text-align: center;
-            width: 85%;
-            max-width: 400px;
-        }
-        .app-icon {
-            width: 100px;
-            height: 100px;
-            border-radius: 22%;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        button {
-            background: #007AFF;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        button:active { transform: scale(0.95); }
-        #result { margin-top: 20px; color: #666; font-size: 0.9rem; }
-    </style>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
+    .container { width: 100%; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; padding-bottom: 150px; }
+    .header-image { width: 100%; height: auto; min-height: 50px; display: block; margin-bottom: 10px; background-color: #111; }
+    select, input, textarea, .btn { display: block; width: 90%; margin: 10px auto; padding: 16px 12px; font-size: 18px !important; border-radius: 12px; border: 2px solid #333; background-color: #1a1a1a; color: #fff; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
+    select { height: 60px; background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'); background-repeat: no-repeat; background-position: right 15px center; background-size: 20px; }
+    textarea { height: 100px; resize: none; }
+    .btn { font-size: 22px; font-weight: bold; border: none; cursor: pointer; text-align: center; justify-content: center; display: flex; align-items: center; text-decoration: none; }
+    #submitBtn { background: linear-gradient(135deg, #ff0000 0%, #990000 100%); margin-top: 15px; width: 90%; }
+    #submitBtn:disabled { background: #555 !important; opacity: 0.6; }
+    #contactLink { background: #333; font-size: 16px; margin-top: 20px; border: 1px solid #555; width: 90%; }
+    .label { width: 90%; text-align: left; font-size: 14px; color: #aaa; margin-top: 8px; font-weight: bold; }
+    .timestamp { margin: 10px 0; font-size: 18px; color: #ccc; }
+    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+    .confirm-box { width: 85%; background: #222; padding: 20px; border-radius: 20px; border: 2px solid red; }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-yes { background: red; flex: 1; padding: 15px; border-radius: 10px; color: #fff; font-weight: bold; border: none; font-size: 18px; }
+    .btn-no { background: #555; flex: 1; padding: 15px; border-radius: 10px; color: #fff; border: none; font-size: 18px; }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <img class="header-image" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg" alt="HEAD LOGO">
+    
+    <div class="label">店舗を選択</div>
+    <select id="store"><option value="" disabled selected>読み込み中...</option></select>
+    
+    <div class="label">担当者を選択</div>
+    <select id="staff"><option value="" disabled selected>読み込み中...</option></select>
+    
+    <input id="staffOther" type="text" placeholder="名前を手入力" style="display:none;">
+    
+    <div class="label">連絡先（数字のみ）</div>
+    <input id="phone" type="tel" placeholder="09012345678" inputmode="tel">
+    
+    <div class="label">備考</div>
+    <textarea id="notes" placeholder="伝達事項があれば記入"></textarea>
+    
+    <div class="timestamp" id="timestamp">--:--:--</div>
+    
+    <button id="submitBtn" class="btn">出庫を記録する</button>
+    <a href="tel:08040821925" id="contactLink" class="btn">📞 担当者に連絡</a>
+  </div>
 
-    <div class="container">
-        <img src="naniwa_icon_v1.png" alt="Icon" class="app-icon">
-        <h1>なにわ管理</h1>
-        <p>GitHub Pages経由で実行中</p>
-        
-        <button onclick="callGAS()">GASを実行する</button>
-        <div id="result">ここにGASの結果が表示されます</div>
+  <div class="overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <div style="color:red; font-size:22px; font-weight:bold; text-align:center;">送信確認</div>
+      <div id="confirmContent" style="margin: 20px 0; line-height: 1.6; font-size: 18px;"></div>
+      <div class="btn-row">
+        <button class="btn-no" onclick="document.getElementById('confirmOverlay').style.display='none'">修正</button>
+        <button class="btn-yes" id="finalSubmit">OK</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // 【重要】ここにあなたのGASウェブアプリのURLを貼り付けてください
-        const GAS_URL = "https://script.google.com/macros/s/XXXXX/exec";
+  <div class="overlay" id="resultOverlay">
+    <div style="font-size:30px; color:red; font-weight:bold;">送信完了</div>
+  </div>
 
-        async function callGAS() {
-            const resDiv = document.getElementById('result');
-            resDiv.innerText = "通信中...";
-            
-            try {
-                // GASにリクエストを送信
-                const response = await fetch(GAS_URL);
-                const data = await response.json();
-                resDiv.innerText = "成功: " + data.message;
-            } catch (e) {
-                resDiv.innerText = "通信エラーが発生しました";
-                console.error(e);
-            }
+  <script>
+    // 【重要】あなたのGASウェブアプリURLに書き換えてください
+    const GAS_URL = "https://script.google.com/macros/s/XXXXX/exec"; 
+
+    let staffMaster = [];
+
+    // 時計の更新
+    function updateTime() { document.getElementById("timestamp").textContent = new Date().toLocaleString('ja-JP'); }
+    setInterval(updateTime, 1000); updateTime();
+
+    // マスタデータの読み込み（fetchを使用）
+    async function loadMasterData() {
+      try {
+        const response = await fetch(`${GAS_URL}?action=getMaster`);
+        const data = await response.json();
+        refreshUI(data);
+      } catch (e) {
+        console.error("マスタ読み込み失敗", e);
+        alert("データの読み込みに失敗しました。URLを確認してください。");
+      }
+    }
+
+    function refreshUI(data) {
+      if(!data || data.error) return;
+      const sSel = document.getElementById("store"), fSel = document.getElementById("staff");
+      sSel.innerHTML = '<option value="" disabled selected>選択してください</option>';
+      fSel.innerHTML = '<option value="" disabled selected>選択してください</option>';
+      if(data.stores) data.stores.forEach(s => sSel.add(new Option(s, s)));
+      staffMaster = data.staffList || [];
+      staffMaster.forEach(s => fSel.add(new Option(s.name, s.name)));
+      fSel.add(new Option("その他(入力)", "その他(入力)"));
+    }
+
+    window.onload = loadMasterData;
+
+    // 担当者選択時の処理
+    document.getElementById("staff").addEventListener("change", e => {
+      const other = document.getElementById("staffOther"), phoneInput = document.getElementById("phone");
+      if (e.target.value === "その他(入力)") {
+        other.style.display = "block"; other.focus(); phoneInput.value = "";
+      } else {
+        other.style.display = "none";
+        const info = staffMaster.find(s => s.name === e.target.value);
+        phoneInput.value = (info && info.phone) ? info.phone.replace(/['\s-]/g, '') : "";
+      }
+    });
+
+    // 送信ボタンクリック
+    document.getElementById("submitBtn").addEventListener("click", () => {
+      const store = document.getElementById("store").value, phone = document.getElementById("phone").value.trim();
+      let staff = document.getElementById("staff").value;
+      if(staff === "その他(入力)") staff = document.getElementById("staffOther").value.trim();
+      if(!store || !staff || !phone) { alert("未入力があります"); return; }
+      document.getElementById("confirmContent").innerHTML = `店舗: ${store}<br>担当: ${staff}<br>電話: ${phone}`;
+      document.getElementById("confirmOverlay").style.display = "flex";
+    });
+
+    // 最終送信（fetch POSTを使用）
+    document.getElementById("finalSubmit").addEventListener("click", async function() {
+      const btn = this; if(btn.disabled) return;
+      btn.disabled = true; btn.innerHTML = "送信中...";
+      
+      const store = document.getElementById("store").value, 
+            phone = document.getElementById("phone").value.trim(), 
+            notes = document.getElementById("notes").value.trim();
+      let staff = document.getElementById("staff").value;
+      if(staff === "その他(入力)") staff = document.getElementById("staffOther").value.trim();
+
+      const record = { store, staff, phone, notes };
+
+      try {
+        const response = await fetch(GAS_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "submit", record: record })
+        });
+        const res = await response.json();
+
+        if (res.success) {
+          document.getElementById("confirmOverlay").style.display = "none";
+          document.getElementById("resultOverlay").style.display = "flex";
+          setTimeout(() => {
+            document.getElementById("resultOverlay").style.display = "none";
+            document.getElementById("staffOther").value = ""; 
+            document.getElementById("phone").value = ""; 
+            document.getElementById("notes").value = "";
+            document.getElementById("store").selectedIndex = 0; 
+            document.getElementById("staff").selectedIndex = 0;
+            if(res.newData) refreshUI(res.newData);
+            btn.disabled = false; btn.innerHTML = "OK";
+          }, 2000);
+        } else {
+          alert("エラー: " + res.error);
+          btn.disabled = false; btn.innerHTML = "OK";
         }
-    </script>
+      } catch (e) {
+        alert("通信エラーが発生しました");
+        btn.disabled = false; btn.innerHTML = "OK";
+      }
+    });
+  </script>
 </body>
 </html>
