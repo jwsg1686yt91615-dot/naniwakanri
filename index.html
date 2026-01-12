@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
   <link rel="apple-touch-icon" href="naniwa_icon_v1.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="naniwa_icon_v1.png">
   <link rel="icon" type="image/png" href="naniwa_icon_v1.png">
   
-  <title>点呼システム</title>
+  <title>なにわ管理 点呼システム</title>
 
   <style>
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
@@ -40,7 +39,6 @@
     
     <div class="label">担当者を選択</div>
     <select id="staff"><option value="" disabled selected>読み込み中...</option></select>
-    
     <input id="staffOther" type="text" placeholder="名前を手入力" style="display:none;">
     
     <div class="label">連絡先（数字のみ）</div>
@@ -71,24 +69,22 @@
   </div>
 
   <script>
-    // 【重要】あなたのGASウェブアプリURLに書き換えてください
+    // 提供されたURLを使用
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec"; 
 
     let staffMaster = [];
 
-    // 時計の更新
     function updateTime() { document.getElementById("timestamp").textContent = new Date().toLocaleString('ja-JP'); }
     setInterval(updateTime, 1000); updateTime();
 
-    // マスタデータの読み込み（fetchを使用）
     async function loadMasterData() {
       try {
         const response = await fetch(`${GAS_URL}?action=getMaster`);
         const data = await response.json();
         refreshUI(data);
       } catch (e) {
-        console.error("マスタ読み込み失敗", e);
-        alert("データの読み込みに失敗しました。URLを確認してください。");
+        console.error("Fetch Error:", e);
+        alert("データの読み込みに失敗しました。シークレットモードでお試しください。");
       }
     }
 
@@ -105,7 +101,6 @@
 
     window.onload = loadMasterData;
 
-    // 担当者選択時の処理
     document.getElementById("staff").addEventListener("change", e => {
       const other = document.getElementById("staffOther"), phoneInput = document.getElementById("phone");
       if (e.target.value === "その他(入力)") {
@@ -117,7 +112,6 @@
       }
     });
 
-    // 送信ボタンクリック
     document.getElementById("submitBtn").addEventListener("click", () => {
       const store = document.getElementById("store").value, phone = document.getElementById("phone").value.trim();
       let staff = document.getElementById("staff").value;
@@ -127,7 +121,6 @@
       document.getElementById("confirmOverlay").style.display = "flex";
     });
 
-    // 最終送信（fetch POSTを使用）
     document.getElementById("finalSubmit").addEventListener("click", async function() {
       const btn = this; if(btn.disabled) return;
       btn.disabled = true; btn.innerHTML = "送信中...";
@@ -138,12 +131,10 @@
       let staff = document.getElementById("staff").value;
       if(staff === "その他(入力)") staff = document.getElementById("staffOther").value.trim();
 
-      const record = { store, staff, phone, notes };
-
       try {
         const response = await fetch(GAS_URL, {
           method: "POST",
-          body: JSON.stringify({ action: "submit", record: record })
+          body: JSON.stringify({ action: "submit", record: { store, staff, phone, notes } })
         });
         const res = await response.json();
 
@@ -165,7 +156,7 @@
           btn.disabled = false; btn.innerHTML = "OK";
         }
       } catch (e) {
-        alert("通信エラーが発生しました");
+        alert("通信失敗。GASのURLを再確認してください。");
         btn.disabled = false; btn.innerHTML = "OK";
       }
     });
