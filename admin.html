@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
-  <link rel="apple-touch-icon" href="naniwa_icon_v1.png">
-  <link rel="icon" type="image/png" href="naniwa_icon_v1.png">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/2e12948bff264ed6035bd078bdf2c2b0e9ad6367/naniwa_icon_v1.png?v=2026">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/2e12948bff264ed6035bd078bdf2c2b0e9ad6367/naniwa_icon_v1.png?v=2026">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/2e12948bff264ed6035bd078bdf2c2b0e9ad6367/naniwa_icon_v1.png?v=2026">
 
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
-  
-  <title>点呼管理</title>
 
   <style>
     :root { --neon-red: #ff003c; --bg-black: #050505; --card-bg: #111; }
@@ -22,51 +20,39 @@
     .pw-input { padding: 18px; font-size: 24px; width: 80%; max-width: 320px; background: #111; border: 2px solid var(--neon-red); color: #fff; text-align: center; border-radius: 12px; margin-bottom: 25px; outline: none; }
     .pw-btn { padding: 18px 60px; background: var(--neon-red); color: #fff; border: none; border-radius: 40px; font-weight: bold; font-size: 20px; box-shadow: 0 0 20px var(--neon-red); cursor: pointer; }
     
+    /* メインコンテンツ */
     #main-content { display: none; padding-bottom: 120px; }
-    
-    /* ヘッダーエリアのロゴを大きく調整 */
-    .header-area { 
-      width: 100%; 
-      text-align: center; 
-      padding: 30px 0; /* 上下の余白を確保 */
-      border-bottom: 1px solid #222; 
-      background: #000; 
-    }
-    .header-img { 
-      width: 85%;      /* 横幅の85%に拡大 */
-      max-width: 450px; 
-      height: auto; 
-      filter: drop-shadow(0 0 15px rgba(255, 0, 60, 0.7)); /* ネオン感を強化 */
-    }
-
+    .header-area { width: 100%; text-align: center; padding: 15px 0; border-bottom: 1px solid #222; background: #000; }
+    .header-img { height: 50px; width: auto; filter: drop-shadow(0 0 8px rgba(255, 0, 60, 0.5)); }
     .container { padding: 15px; }
-    h2 { font-size: 15px; color: var(--neon-red); text-transform: uppercase; letter-spacing: 2px; margin: 20px 0; text-align: center; text-shadow: 0 0 8px var(--neon-red); }
     
-    .history-card { background: var(--card-bg); border-left: 4px solid var(--neon-red); margin-bottom: 15px; padding: 15px; border-radius: 8px; }
+    h2 { font-size: 15px; color: var(--neon-red); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 8px var(--neon-red); margin: 20px 0; text-align: center; }
+    
+    /* 履歴カード */
+    .history-card { background: var(--card-bg); border-left: 4px solid var(--neon-red); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
     .card-row { display: flex; justify-content: space-between; align-items: center; }
-    .store-name { font-size: 18px; font-weight: bold; }
+    .store-name { font-size: 18px; font-weight: bold; color: #fff; }
     .time-value { font-size: 20px; color: var(--neon-red); font-weight: bold; }
+    .staff-name { font-size: 16px; color: #ccc; margin: 10px 0; }
+    .contact-area { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #222; padding-top: 10px; margin-top: 10px; }
+    .call-btn { border: 1px solid var(--neon-red); color: var(--neon-red); text-decoration: none; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: bold; }
     
-    .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-    .nav-item { color: #666; text-align: center; font-size: 10px; flex: 1; cursor: pointer; }
+    /* 下部ナビ */
+    .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+    .nav-item { color: #666; text-align: center; font-size: 11px; flex: 1; cursor: pointer; padding: 10px 0; }
     .nav-item.active { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
-    .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
-
+    .nav-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+    
     .view-section { display: none; }
     .view-section.active { display: block; }
     
-    select { width: 100%; height: 50px; background: #222; color: #fff; border: 1px solid #444; border-radius: 10px; margin-bottom: 20px; font-size: 16px; padding: 0 10px; -webkit-appearance: none; }
-
-    /* カレンダーの色調整 */
-    .fc { background: #111; padding: 10px; border-radius: 10px; border: none; }
-    .fc-toolbar-title { font-size: 1.1em !important; font-weight: bold; }
-    .fc-daygrid-day-number { color: #fff; text-decoration: none; }
-    .fc-col-header-cell-cushion { color: #aaa; text-decoration: none; }
+    select { width: 100%; height: 55px; padding: 0 15px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 12px; font-size: 17px; margin-bottom: 20px; outline: none; }
   </style>
 </head>
 <body>
+
   <div id="auth-screen">
-    <img src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg" style="width: 80%; max-width: 300px; margin-bottom:30px; filter: drop-shadow(0 0 10px rgba(255,0,0,0.5));">
+    <img src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg" style="height:50px; margin-bottom:30px;">
     <input type="password" id="admin-pw" class="pw-input" placeholder="PASS" inputmode="numeric">
     <button class="pw-btn" onclick="checkAuth()">LOGIN</button>
   </div>
@@ -75,16 +61,33 @@
     <div class="header-area">
       <img class="header-img" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg">
     </div>
-    
+
     <div class="container">
-      <div id="sec-list" class="view-section active"><h2 id="list-title">Today's Records</h2><div id="list-contents"></div></div>
-      <div id="sec-cal" class="view-section"><h2>Calendar</h2><div id="calendar"></div></div>
-      <div id="sec-staff" class="view-section"><h2>Staff Filter</h2><select id="f-staff-sel" onchange="applyStaffFilter()"></select><div id="staff-res"></div></div>
-      <div id="sec-store" class="view-section"><h2>Store Filter</h2><select id="f-store-sel" onchange="applyStoreFilter()"></select><div id="store-res"></div></div>
+      <div id="sec-list" class="view-section active">
+        <h2 id="list-title">Today's Records</h2>
+        <div id="list-contents"></div>
+      </div>
+
+      <div id="sec-cal" class="view-section">
+        <h2>Calendar</h2>
+        <div id="calendar"></div>
+      </div>
+
+      <div id="sec-staff" class="view-section">
+        <h2>Staff Filter</h2>
+        <select id="f-staff-sel" onchange="applyStaffFilter()"></select>
+        <div id="staff-res"></div>
+      </div>
+
+      <div id="sec-store" class="view-section">
+        <h2>Store Filter</h2>
+        <select id="f-store-sel" onchange="applyStoreFilter()"></select>
+        <div id="store-res"></div>
+      </div>
     </div>
 
     <div class="nav-bar">
-      <div class="nav-item active" id="nav-list" onclick="switchView('list')"><span class="nav-icon">📋</span>一覧</div>
+      <div class="nav-item active" id="nav-list" onclick="switchView('list')"><span class="nav-icon">📋</span>履歴</div>
       <div class="nav-item" id="nav-cal" onclick="switchView('cal')"><span class="nav-icon">📅</span>月間</div>
       <div class="nav-item" id="nav-staff" onclick="switchView('staff')"><span class="nav-icon">👤</span>担当</div>
       <div class="nav-item" id="nav-store" onclick="switchView('store')"><span class="nav-icon">🏪</span>店舗</div>
@@ -92,101 +95,152 @@
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec"; 
-
     let allData = [];
     let calendar;
 
-    async function checkAuth() {
+    // 認証 & データ取得
+    function checkAuth() {
       const pw = document.getElementById('admin-pw').value;
       const btn = document.querySelector('.pw-btn');
-      btn.disabled = true; btn.innerHTML = "認証中...";
-      
-      try {
-        const response = await fetch(`${GAS_URL}?action=getHistory&pass=${pw}`);
-        const data = await response.json();
-        
-        if (data.error === "AUTH_FAILED") { 
-          alert("認証失敗"); 
+      btn.disabled = true; btn.innerHTML = "LOADING...";
+
+      google.script.run
+        .withSuccessHandler(data => {
+          if (data === "AUTH_FAILED") {
+            alert("パスワードが正しくありません");
+            btn.disabled = false; btn.innerHTML = "LOGIN";
+          } else if (data && typeof data === 'object') {
+            allData = data.history || [];
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            
+            // プルダウンのセットアップ
+            setupFilters(data.allStores, data.allStaff);
+            // 初期表示
+            renderList();
+            initCalendar();
+          }
+        })
+        .withFailureHandler(err => {
+          alert("通信エラー: " + err);
           btn.disabled = false; btn.innerHTML = "LOGIN";
-        } else if (data && !data.error) {
-          allData = data.history || [];
-          document.getElementById('auth-screen').style.display = 'none';
-          document.getElementById('main-content').style.display = 'block';
-          setupFilters(data.allStores, data.allStaff);
-          renderList();
-          initCalendar();
-        }
-      } catch (err) { 
-        alert("通信失敗"); 
-        btn.disabled = false; btn.innerHTML = "LOGIN";
-      }
+        })
+        .getHistoryData(pw);
     }
 
+    // プルダウン生成
     function setupFilters(stores, staffList) {
-      const sS = document.getElementById('f-store-sel'), fS = document.getElementById('f-staff-sel');
-      sS.innerHTML = '<option value="">店舗を選択</option>';
-      fS.innerHTML = '<option value="">担当者を選択</option>';
-      if (stores) stores.forEach(s => sS.add(new Option(s, s)));
-      if (staffList) staffList.forEach(s => fS.add(new Option(s, s)));
+      const sSel = document.getElementById('f-store-sel');
+      const fSel = document.getElementById('f-staff-sel');
+      
+      sSel.innerHTML = '<option value="">店舗を選択してください</option>';
+      fSel.innerHTML = '<option value="">担当者を選択してください</option>';
+      
+      if (stores) stores.forEach(s => sSel.add(new Option(s, s)));
+      if (staffList) staffList.forEach(s => fSel.add(new Option(s, s)));
     }
 
+    // 履歴カードのHTML生成
     function createCard(item) {
-      const d = new Date(item.date);
-      const tS = d.toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
-      const card = document.createElement('div'); card.className = 'history-card';
+      const dateObj = new Date(item.date);
+      const timeStr = dateObj.toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
+      const phone = item.phone ? item.phone.toString().replace(/['\s-]/g, '') : "";
+      
+      const card = document.createElement('div');
+      card.className = 'history-card';
       card.innerHTML = `
-        <div class="card-row"><div class="store-name">${item.store}</div><div class="time-value">${tS}</div></div>
-        <div style="color:#ccc; margin-top:5px;">担当: ${item.staff}</div>
-        ${item.notes ? `<div style="background:#222; padding:8px; border-radius:5px; margin-top:10px; font-size:13px; color:#aaa;">${item.notes}</div>` : ''}
+        <div class="card-row">
+          <div class="store-name">${item.store}</div>
+          <div class="time-value">${timeStr}</div>
+        </div>
+        <div class="staff-name">担当: ${item.staff}</div>
+        <div class="contact-area">
+          <span>📞 ${phone}</span>
+          ${phone ? `<a href="tel:${phone}" class="call-btn">電話する</a>` : ''}
+        </div>
+        ${item.notes ? `<div style="margin-top:10px; font-size:13px; color:#888; background:#000; padding:8px; border-radius:5px;">${item.notes}</div>` : ''}
       `;
       return card;
     }
 
+    // 履歴一覧の描画
     function renderList(targetDateStr = null) {
-      const fDate = targetDateStr || new Date().toLocaleDateString('ja-JP');
-      document.getElementById('list-title').innerText = fDate + " Records";
-      const c = document.getElementById('list-contents'); c.innerHTML = '';
+      const todayStr = new Date().toLocaleDateString('ja-JP');
+      const fDate = targetDateStr || todayStr;
+      
+      document.getElementById('list-title').innerText = (fDate === todayStr ? "本日" : fDate) + " の記録";
+      const contents = document.getElementById('list-contents');
+      contents.innerHTML = '';
+      
       const filtered = allData.filter(d => new Date(d.date).toLocaleDateString('ja-JP') === fDate);
-      if (filtered.length === 0) c.innerHTML = '<p style="text-align:center;color:#555;">記録なし</p>';
-      else filtered.forEach(item => c.appendChild(createCard(item)));
+      
+      if (filtered.length === 0) {
+        contents.innerHTML = '<p style="text-align:center; color:#444; margin-top:30px;">記録がありません</p>';
+      } else {
+        // 新しい順に表示
+        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(item => {
+          contents.appendChild(createCard(item));
+        });
+      }
     }
 
+    // 担当者フィルタ適用
     function applyStaffFilter() {
-      const v = document.getElementById('f-staff-sel').value, c = document.getElementById('staff-res');
-      c.innerHTML = ''; 
-      allData.filter(d => d.staff === v).forEach(item => c.appendChild(createCard(item)));
+      const val = document.getElementById('f-staff-sel').value;
+      const res = document.getElementById('staff-res');
+      res.innerHTML = '';
+      if(!val) return;
+      allData.filter(d => d.staff === val).forEach(item => res.appendChild(createCard(item)));
     }
 
+    // 店舗フィルタ適用
     function applyStoreFilter() {
-      const v = document.getElementById('f-store-sel').value, c = document.getElementById('store-res');
-      c.innerHTML = ''; 
-      allData.filter(d => d.store === v).forEach(item => c.appendChild(createCard(item)));
+      const val = document.getElementById('f-store-sel').value;
+      const res = document.getElementById('store-res');
+      res.innerHTML = '';
+      if(!val) return;
+      allData.filter(d => d.store === val).forEach(item => res.appendChild(createCard(item)));
     }
 
+    // カレンダー初期化
     function initCalendar() {
-      const counts = {}; 
-      allData.forEach(d => { 
-        const s = new Date(d.date).toLocaleDateString('ja-JP').replace(/\//g, '-'); 
-        counts[s] = (counts[s] || 0) + 1; 
+      const counts = {};
+      allData.forEach(d => {
+        const s = new Date(d.date).toLocaleDateString('ja-JP').replace(/\//g, '-');
+        counts[s] = (counts[s] || 0) + 1;
       });
-      const events = Object.keys(counts).map(s => ({ title: `● ${counts[s]}件`, start: s, allDay: true }));
+      
+      const events = Object.keys(counts).map(dateStr => ({
+        title: counts[dateStr] + "件",
+        start: dateStr,
+        allDay: true
+      }));
 
-      calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth', locale: 'ja', height: 'auto', events,
-        dateClick: (info) => { 
-          const clickedDate = new Date(info.date).toLocaleDateString('ja-JP');
-          renderList(clickedDate); 
-          switchView('list'); 
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ja',
+        height: 'auto',
+        events: events,
+        dateClick: function(info) {
+          renderList(info.date.toLocaleDateString('ja-JP'));
+          switchView('list');
         }
       });
       calendar.render();
     }
 
+    // 画面切り替え
     function switchView(id) {
-      document.querySelectorAll('.view-section').forEach(s => s.classList.toggle('active', s.id === 'sec-' + id));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.id === 'nav-' + id));
-      if(id === 'cal' && calendar) { setTimeout(() => calendar.updateSize(), 100); }
+      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('sec-' + id).classList.add('active');
+      
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('nav-' + id).classList.add('active');
+      
+      if(id === 'cal' && calendar) {
+        setTimeout(() => calendar.updateSize(), 150);
+      }
     }
   </script>
 </body>
