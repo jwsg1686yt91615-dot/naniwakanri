@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/ami/main/Gemini_Generated_Image_62q3zc62q3zc62q3.png">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/ami/main/Gemini_Generated_Image_62q3zc62q3zc62q3.png">
+
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
+  
   <style>
     :root { --neon-red: #ff003c; --bg-black: #050505; --card-bg: #111; }
     body { background-color: var(--bg-black); color: #fff; font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
@@ -54,9 +65,7 @@
   </div>
 
   <script>
-    // ★ここにご自身のGASウェブアプリURLを貼り付けてください
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec";
-
     let allData = [];
     let calendar;
 
@@ -77,22 +86,13 @@
       const pwInput = document.getElementById('admin-pw');
       const pw = pwInput.value.trim();
       const btn = document.querySelector('.pw-btn');
-      
-      if(!pw) { alert("パスワードを入力してください"); return; }
-      if(btn.disabled) return;
-      
-      btn.disabled = true; 
-      btn.innerHTML = "認証中...";
-      
+      if(!pw || btn.disabled) return;
+      btn.disabled = true; btn.innerHTML = "認証中...";
       try {
-        // キーを「pass」にして送信
         const data = await callGas("getHistoryData", { pass: pw });
-        
         if (data === "AUTH_FAILED") {
-          alert("認証失敗：パスワードが違います"); 
-          btn.disabled = false; btn.innerHTML = "LOGIN";
-          pwInput.value = "";
-        } else if (data && typeof data === 'object') {
+          alert("認証失敗"); btn.disabled = false; btn.innerHTML = "LOGIN";
+        } else {
           allData = data.history || [];
           document.getElementById('auth-screen').style.display = 'none';
           document.getElementById('main-content').style.display = 'block';
@@ -100,10 +100,7 @@
           renderList();
           initCalendar();
         }
-      } catch (e) {
-        alert("サーバー通信エラー。GASのデプロイ設定を確認してください。");
-        btn.disabled = false; btn.innerHTML = "LOGIN";
-      }
+      } catch (e) { alert("通信エラー"); btn.disabled = false; }
     }
 
     document.getElementById('admin-pw').addEventListener('keypress', e => { if(e.key === 'Enter') checkAuth(); });
@@ -121,14 +118,7 @@
       const tS = d.toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
       const phone = item.phone ? item.phone.toString().replace(/['\s-]/g, '') : "";
       const card = document.createElement('div'); card.className = 'history-card';
-      card.innerHTML = `
-        <div class="card-row"><div class="store-name">${item.store}</div><div class="time-value">${tS}</div></div>
-        <div class="staff-name">担当: ${item.staff}</div>
-        ${item.notes ? `<div style="font-size:13px; color:#aaa; margin-bottom:10px;">備考: ${item.notes}</div>` : ''}
-        <div class="card-row" style="border-top:1px solid #222; padding-top:10px; margin-top:10px;">
-          <span>📞 ${phone}</span>${phone ? `<a href="tel:${phone}" style="background:var(--neon-red);color:#fff;text-decoration:none;padding:5px 12px;border-radius:10px;font-size:12px;">発信</a>` : ''}
-        </div>
-      `;
+      card.innerHTML = `<div class="card-row"><div class="store-name">${item.store}</div><div class="time-value">${tS}</div></div><div class="staff-name">担当: ${item.staff}</div>${item.notes ? `<div style="font-size:13px; color:#aaa; margin-bottom:10px;">備考: ${item.notes}</div>` : ''}<div class="card-row" style="border-top:1px solid #222; padding-top:10px; margin-top:10px;"><span>📞 ${phone}</span>${phone ? `<a href="tel:${phone}" style="background:var(--neon-red);color:#fff;text-decoration:none;padding:5px 12px;border-radius:10px;font-size:12px;">発信</a>` : ''}</div>`;
       return card;
     }
 
@@ -137,7 +127,7 @@
       document.getElementById('list-title').innerText = targetIso + " Records";
       const c = document.getElementById('list-contents'); c.innerHTML = '';
       const filtered = allData.filter(d => getIsodate(d.date) === targetIso);
-      if (filtered.length === 0) c.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">記録なし</p>';
+      if (filtered.length === 0) c.innerHTML = '<p style="text-align:center;color:#555;">記録なし</p>';
       else filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(item => c.appendChild(createCard(item)));
     }
 
@@ -158,10 +148,7 @@
     function initCalendar() {
       const counts = {}; allData.forEach(d => { const s = getIsodate(d.date); counts[s] = (counts[s] || 0) + 1; });
       const events = Object.keys(counts).map(s => ({ title: `${counts[s]}件`, start: s, allDay: true }));
-      calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth', locale: 'ja', height: 'auto', events,
-        dateClick: (info) => { renderList(info.date); switchView('list'); }
-      });
+      calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'ja', height: 'auto', events, dateClick: (info) => { renderList(info.date); switchView('list'); } });
       calendar.render();
     }
 
