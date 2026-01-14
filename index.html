@@ -4,24 +4,65 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/2e12948bff264ed6035bd078bdf2c2b0e9ad6367/naniwa_icon_v1.png?v=700">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/2e12948bff264ed6035bd078bdf2c2b0e9ad6367/naniwa_icon_v1.png?v=700">
+  
   <style>
-    /* CSSは変更なしのため省略（以前のコードのものをそのまま使ってください） */
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
-    .container { width: 100%; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; padding-bottom: 150px; }
-    .header-image { width: 100%; height: auto; min-height: 50px; display: block; margin-bottom: 10px; background-color: #111; }
-    select, input, textarea, .btn { display: block; width: 90%; margin: 10px auto; padding: 16px 12px; font-size: 18px !important; border-radius: 12px; border: 2px solid #333; background-color: #1a1a1a; color: #fff; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
+    
+    /* PCでは広く、スマホでは中央に収まるレスポンシブ設計 */
+    .container { 
+      width: 100%; 
+      max-width: 1000px; 
+      margin: 0 auto; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      padding: 20px 0 150px 0; 
+    }
+
+    .header-image { width: 100%; max-width: 500px; height: auto; min-height: 50px; display: block; margin-bottom: 20px; background-color: #111; }
+
+    /* 入力項目：PCでも使いやすいよう最大幅を600pxに制限 */
+    select, input, textarea, .btn { 
+      display: block; 
+      width: 90%; 
+      max-width: 600px; 
+      margin: 10px auto; 
+      padding: 16px 12px; 
+      font-size: 18px !important; 
+      border-radius: 12px; 
+      border: 2px solid #333; 
+      background-color: #1a1a1a; 
+      color: #fff; 
+      box-sizing: border-box; 
+      -webkit-appearance: none; 
+      appearance: none; 
+    }
+
+    .label { 
+      width: 90%; 
+      max-width: 600px; 
+      text-align: left; 
+      font-size: 14px; 
+      color: #aaa; 
+      margin-top: 12px; 
+      font-weight: bold; 
+    }
+
     select { height: 60px; background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'); background-repeat: no-repeat; background-position: right 15px center; background-size: 20px; }
-    textarea { height: 100px; resize: none; }
+    textarea { height: 120px; resize: vertical; }
     .btn { font-size: 22px; font-weight: bold; border: none; cursor: pointer; text-align: center; justify-content: center; display: flex; align-items: center; }
-    #submitBtn { background: linear-gradient(135deg, #ff0000 0%, #990000 100%); margin-top: 15px; }
+    #submitBtn { background: linear-gradient(135deg, #ff0000 0%, #990000 100%); margin-top: 20px; }
     #submitBtn:disabled { background: #555 !important; opacity: 0.6; }
-    .label { width: 90%; text-align: left; font-size: 14px; color: #aaa; margin-top: 8px; font-weight: bold; }
-    .timestamp { margin: 10px 0; font-size: 18px; color: #ccc; }
+    .timestamp { margin: 15px 0; font-size: 20px; color: #ccc; font-weight: bold; }
+    
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
-    .confirm-box { width: 85%; background: #222; padding: 20px; border-radius: 20px; border: 2px solid red; }
+    .confirm-box { width: 85%; max-width: 400px; background: #222; padding: 20px; border-radius: 20px; border: 2px solid red; }
     .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-yes { background: red; flex: 1; padding: 15px; border-radius: 10px; color: #fff; font-weight: bold; border: none; }
-    .btn-no { background: #555; flex: 1; padding: 15px; border-radius: 10px; color: #fff; border: none; }
+    .btn-yes { background: red; flex: 1; padding: 15px; border-radius: 10px; color: #fff; font-weight: bold; border: none; cursor: pointer; }
+    .btn-no { background: #555; flex: 1; padding: 15px; border-radius: 10px; color: #fff; border: none; cursor: pointer; }
+    #resultOverlay div { font-size: 40px; color: red; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -56,7 +97,7 @@
 
     let staffMaster = [];
 
-    // GAS呼び出し用共通関数
+    // GitHubからGASを呼び出すための通信関数
     async function callGas(method, params = {}) {
       const response = await fetch(GAS_URL, {
         method: "POST",
@@ -84,8 +125,12 @@
     }
 
     window.onload = async () => {
-      const data = await callGas("getMasterData");
-      refreshUI(data);
+      try {
+        const data = await callGas("getMasterData");
+        refreshUI(data);
+      } catch (e) {
+        console.error("Master data load error:", e);
+      }
     };
 
     document.getElementById("staff").addEventListener("change", e => {
