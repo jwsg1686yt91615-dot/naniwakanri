@@ -4,23 +4,13 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png?v=700">
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
   <style>
     :root { --neon-red: #ff003c; --bg-black: #050505; --card-bg: #111; }
     body { background-color: var(--bg-black); color: #fff; font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-    
-    /* ロゴサイズ強化 */
     .header-area { width: 100%; text-align: center; padding: 25px 0; border-bottom: 1px solid #222; background: #000; }
-    .header-img { 
-      height: 80px !important; /* 高さを80pxに固定 */
-      width: auto; 
-      max-width: 90%;
-      object-fit: contain;
-      filter: drop-shadow(0 0 10px rgba(255, 0, 60, 0.6)); 
-    }
-    
+    .header-img { height: 80px !important; width: auto; max-width: 90%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255, 0, 60, 0.6)); }
     #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .pw-input { padding: 18px; font-size: 24px; width: 80%; max-width: 320px; background: #111; border: 2px solid var(--neon-red); color: #fff; text-align: center; border-radius: 12px; margin-bottom: 25px; outline: none; }
     .pw-btn { padding: 18px 60px; background: var(--neon-red); color: #fff; border: none; border-radius: 40px; font-weight: bold; font-size: 20px; box-shadow: 0 0 20px var(--neon-red); cursor: pointer; }
@@ -62,31 +52,68 @@
       <div class="nav-item" id="nav-store" onclick="switchView('store')"><span class="nav-icon">🏪</span>店舗</div>
     </div>
   </div>
+
   <script>
+    // ★ここにあなたのGASウェブアプリURLを貼り付けてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec";
+
     let allData = [];
     let calendar;
 
-    function checkAuth() {
+    // GitHub(外部)からGASを叩くための共通関数
+    async function callGas(method, params = {}) {
+      try {
+        const response = await fetch(GAS_URL, {
+          method: "POST",
+          body: JSON.stringify({ method: method, ...params })
+        });
+        return await response.json();
+      } catch (err) {
+        console.error("Communication error:", err);
+        throw err;
+      }
+    }
+
+    function getIsodate(dateObj) {
+      const d = new Date(dateObj);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    async function checkAuth() {
       const pw = document.getElementById('admin-pw').value;
       const btn = document.querySelector('.pw-btn');
+      if(btn.disabled) return;
       btn.disabled = true; btn.innerHTML = "認証中...";
-      google.script.run.withSuccessHandler(data => {
+      
+      try {
+        // google.script.run の代わりに callGas を使用
+        const data = await callGas("getHistoryData", { pass: pw });
+        
         if (data === "AUTH_FAILED") {
-          alert("認証失敗"); btn.disabled = false; btn.innerHTML = "LOGIN";
+          alert("認証失敗"); 
+          btn.disabled = false; 
+          btn.innerHTML = "LOGIN";
         } else if (data && typeof data === 'object') {
           allData = data.history || [];
           document.getElementById('auth-screen').style.display = 'none';
           document.getElementById('main-content').style.display = 'block';
-          setupFilters(data.allStores, data.allStaff); // プルダウン生成
+          setupFilters(data.allStores, data.allStaff);
           renderList();
           initCalendar();
         }
-      }).getHistoryData(pw);
+      } catch (e) {
+        alert("通信エラーが発生しました");
+        btn.disabled = false; 
+        btn.innerHTML = "LOGIN";
+      }
     }
 
+    document.getElementById('admin-pw').addEventListener('keypress', e => { 
+      if(e.key === 'Enter') checkAuth(); 
+    });
+
     function setupFilters(stores, staffList) {
-      const sS = document.getElementById('f-store-sel');
-      const fS = document.getElementById('f-staff-sel');
+      const sS = document.getElementById('f-store-sel'), fS = document.getElementById('f-staff-sel');
       sS.innerHTML = '<option value="">店舗を選択してください</option>';
       fS.innerHTML = '<option value="">担当者を選択してください</option>';
       if (stores) stores.forEach(s => sS.add(new Option(s, s)));
@@ -97,23 +124,26 @@
       const d = new Date(item.date);
       const tS = d.toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
       const phone = item.phone ? item.phone.toString().replace(/['\s-]/g, '') : "";
-      const card = document.createElement('div'); card.className = 'history-card';
+      const card = document.createElement('div'); 
+      card.className = 'history-card';
       card.innerHTML = `
         <div class="card-row"><div class="store-name">${item.store}</div><div class="time-value">${tS}</div></div>
         <div class="staff-name">担当: ${item.staff}</div>
+        ${item.notes ? `<div style="font-size:13px; color:#aaa; margin-bottom:10px;">備考: ${item.notes}</div>` : ''}
         <div class="card-row" style="border-top:1px solid #222; padding-top:10px; margin-top:10px;">
-          <span>📞 ${phone}</span>${phone ? `<a href="tel:${phone}" class="call-btn">発信</a>` : ''}
+          <span>📞 ${phone}</span>
+          ${phone ? `<a href="tel:${phone}" style="background:var(--neon-red);color:#fff;text-decoration:none;padding:5px 12px;border-radius:10px;font-size:12px;">発信</a>` : ''}
         </div>
       `;
       return card;
     }
 
     function renderList(targetDateStr = null) {
-      const fDate = targetDateStr || new Date().toLocaleDateString('ja-JP');
-      document.getElementById('list-title').innerText = fDate + " Records";
+      const targetIso = targetDateStr ? getIsodate(targetDateStr) : getIsodate(new Date());
+      document.getElementById('list-title').innerText = targetIso + " Records";
       const c = document.getElementById('list-contents'); c.innerHTML = '';
-      const filtered = allData.filter(d => new Date(d.date).toLocaleDateString('ja-JP') === fDate);
-      if (filtered.length === 0) c.innerHTML = '<p style="text-align:center;color:#555;">記録なし</p>';
+      const filtered = allData.filter(d => getIsodate(d.date) === targetIso);
+      if (filtered.length === 0) c.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">記録なし</p>';
       else filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(item => c.appendChild(createCard(item)));
     }
 
@@ -121,22 +151,34 @@
       const v = document.getElementById('f-staff-sel').value;
       const c = document.getElementById('staff-res'); c.innerHTML = '';
       if(!v) return;
-      allData.filter(d => d.staff === v).forEach(item => c.appendChild(createCard(item)));
+      allData.filter(d => d.staff === v)
+             .sort((a,b)=>new Date(b.date)-new Date(a.date))
+             .forEach(item => c.appendChild(createCard(item)));
     }
 
     function applyStoreFilter() {
       const v = document.getElementById('f-store-sel').value;
       const c = document.getElementById('store-res'); c.innerHTML = '';
       if(!v) return;
-      allData.filter(d => d.store === v).forEach(item => c.appendChild(createCard(item)));
+      allData.filter(d => d.store === v)
+             .sort((a,b)=>new Date(b.date)-new Date(a.date))
+             .forEach(item => c.appendChild(createCard(item)));
     }
 
     function initCalendar() {
-      const counts = {}; allData.forEach(d => { const s = new Date(d.date).toLocaleDateString('ja-JP'); counts[s] = (counts[s] || 0) + 1; });
-      const events = Object.keys(counts).map(s => ({ title: `${counts[s]}件`, start: s.replace(/\//g, '-'), allDay: true }));
+      const counts = {}; 
+      allData.forEach(d => { 
+        const s = getIsodate(d.date); 
+        counts[s] = (counts[s] || 0) + 1; 
+      });
+      const events = Object.keys(counts).map(s => ({ title: `${counts[s]}件`, start: s, allDay: true }));
+      
       calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth', locale: 'ja', height: 'auto', events,
-        dateClick: (info) => { renderList(info.date.toLocaleDateString('ja-JP')); switchView('list'); }
+        initialView: 'dayGridMonth', 
+        locale: 'ja', 
+        height: 'auto', 
+        events,
+        dateClick: (info) => { renderList(info.date); switchView('list'); }
       });
       calendar.render();
     }
@@ -146,7 +188,205 @@
       document.getElementById('sec-' + id).classList.add('active');
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.getElementById('nav-' + id).classList.add('active');
-      if(id === 'cal' && calendar) { setTimeout(() => calendar.updateSize(), 150); }
+      if(id === 'cal' && calendar) { 
+        setTimeout(() => calendar.updateSize(), 150); 
+      }
+    }
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
+  <style>
+    :root { --neon-red: #ff003c; --bg-black: #050505; --card-bg: #111; }
+    body { background-color: var(--bg-black); color: #fff; font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+    .header-area { width: 100%; text-align: center; padding: 25px 0; border-bottom: 1px solid #222; background: #000; }
+    .header-img { height: 80px !important; width: auto; max-width: 90%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255, 0, 60, 0.6)); }
+    #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .pw-input { padding: 18px; font-size: 24px; width: 80%; max-width: 320px; background: #111; border: 2px solid var(--neon-red); color: #fff; text-align: center; border-radius: 12px; margin-bottom: 25px; outline: none; }
+    .pw-btn { padding: 18px 60px; background: var(--neon-red); color: #fff; border: none; border-radius: 40px; font-weight: bold; font-size: 20px; box-shadow: 0 0 20px var(--neon-red); cursor: pointer; }
+    #main-content { display: none; padding-bottom: 120px; }
+    .container { padding: 15px; }
+    h2 { font-size: 14px; color: var(--neon-red); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 8px var(--neon-red); margin: 20px 0; text-align: center; }
+    .history-card { background: var(--card-bg); border-left: 4px solid var(--neon-red); margin-bottom: 15px; padding: 15px; border-radius: 8px; }
+    .card-row { display: flex; justify-content: space-between; align-items: center; }
+    .store-name { font-size: 18px; font-weight: bold; }
+    .time-value { font-size: 20px; color: var(--neon-red); font-weight: bold; }
+    .staff-name { font-size: 16px; color: #ccc; margin: 10px 0; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+    .nav-item { color: #666; text-align: center; font-size: 11px; flex: 1; cursor: pointer; }
+    .nav-item.active { color: var(--neon-red); }
+    .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    select { width: 100%; height: 55px; padding: 0 15px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 12px; font-size: 17px; margin-bottom: 20px; -webkit-appearance: none; }
+  </style>
+</head>
+<body>
+  <div id="auth-screen">
+    <img src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg" class="header-img" style="margin-bottom:30px;">
+    <input type="password" id="admin-pw" class="pw-input" placeholder="PASS" inputmode="numeric">
+    <button class="pw-btn" onclick="checkAuth()">LOGIN</button>
+  </div>
+  <div id="main-content">
+    <div class="header-area"><img class="header-img" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg"></div>
+    <div class="container">
+      <div id="sec-list" class="view-section active"><h2 id="list-title">Today's Records</h2><div id="list-contents"></div></div>
+      <div id="sec-cal" class="view-section"><h2>Calendar</h2><div id="calendar"></div></div>
+      <div id="sec-staff" class="view-section"><h2>Staff Filter</h2><select id="f-staff-sel" onchange="applyStaffFilter()"></select><div id="staff-res"></div></div>
+      <div id="sec-store" class="view-section"><h2>Store Filter</h2><select id="f-store-sel" onchange="applyStoreFilter()"></select><div id="store-res"></div></div>
+    </div>
+    <div class="nav-bar">
+      <div class="nav-item active" id="nav-list" onclick="switchView('list')"><span class="nav-icon">📋</span>履歴</div>
+      <div class="nav-item" id="nav-cal" onclick="switchView('cal')"><span class="nav-icon">📅</span>月間</div>
+      <div class="nav-item" id="nav-staff" onclick="switchView('staff')"><span class="nav-icon">👤</span>担当</div>
+      <div class="nav-item" id="nav-store" onclick="switchView('store')"><span class="nav-icon">🏪</span>店舗</div>
+    </div>
+  </div>
+
+  <script>
+    // ★ここにあなたのGASウェブアプリURLを貼り付けてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec";
+
+    let allData = [];
+    let calendar;
+
+    // GitHub(外部)からGASを叩くための共通関数
+    async function callGas(method, params = {}) {
+      try {
+        const response = await fetch(GAS_URL, {
+          method: "POST",
+          body: JSON.stringify({ method: method, ...params })
+        });
+        return await response.json();
+      } catch (err) {
+        console.error("Communication error:", err);
+        throw err;
+      }
+    }
+
+    function getIsodate(dateObj) {
+      const d = new Date(dateObj);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    async function checkAuth() {
+      const pw = document.getElementById('admin-pw').value;
+      const btn = document.querySelector('.pw-btn');
+      if(btn.disabled) return;
+      btn.disabled = true; btn.innerHTML = "認証中...";
+      
+      try {
+        // google.script.run の代わりに callGas を使用
+        const data = await callGas("getHistoryData", { pass: pw });
+        
+        if (data === "AUTH_FAILED") {
+          alert("認証失敗"); 
+          btn.disabled = false; 
+          btn.innerHTML = "LOGIN";
+        } else if (data && typeof data === 'object') {
+          allData = data.history || [];
+          document.getElementById('auth-screen').style.display = 'none';
+          document.getElementById('main-content').style.display = 'block';
+          setupFilters(data.allStores, data.allStaff);
+          renderList();
+          initCalendar();
+        }
+      } catch (e) {
+        alert("通信エラーが発生しました");
+        btn.disabled = false; 
+        btn.innerHTML = "LOGIN";
+      }
+    }
+
+    document.getElementById('admin-pw').addEventListener('keypress', e => { 
+      if(e.key === 'Enter') checkAuth(); 
+    });
+
+    function setupFilters(stores, staffList) {
+      const sS = document.getElementById('f-store-sel'), fS = document.getElementById('f-staff-sel');
+      sS.innerHTML = '<option value="">店舗を選択してください</option>';
+      fS.innerHTML = '<option value="">担当者を選択してください</option>';
+      if (stores) stores.forEach(s => sS.add(new Option(s, s)));
+      if (staffList) staffList.forEach(s => fS.add(new Option(s, s)));
+    }
+
+    function createCard(item) {
+      const d = new Date(item.date);
+      const tS = d.toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
+      const phone = item.phone ? item.phone.toString().replace(/['\s-]/g, '') : "";
+      const card = document.createElement('div'); 
+      card.className = 'history-card';
+      card.innerHTML = `
+        <div class="card-row"><div class="store-name">${item.store}</div><div class="time-value">${tS}</div></div>
+        <div class="staff-name">担当: ${item.staff}</div>
+        ${item.notes ? `<div style="font-size:13px; color:#aaa; margin-bottom:10px;">備考: ${item.notes}</div>` : ''}
+        <div class="card-row" style="border-top:1px solid #222; padding-top:10px; margin-top:10px;">
+          <span>📞 ${phone}</span>
+          ${phone ? `<a href="tel:${phone}" style="background:var(--neon-red);color:#fff;text-decoration:none;padding:5px 12px;border-radius:10px;font-size:12px;">発信</a>` : ''}
+        </div>
+      `;
+      return card;
+    }
+
+    function renderList(targetDateStr = null) {
+      const targetIso = targetDateStr ? getIsodate(targetDateStr) : getIsodate(new Date());
+      document.getElementById('list-title').innerText = targetIso + " Records";
+      const c = document.getElementById('list-contents'); c.innerHTML = '';
+      const filtered = allData.filter(d => getIsodate(d.date) === targetIso);
+      if (filtered.length === 0) c.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">記録なし</p>';
+      else filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(item => c.appendChild(createCard(item)));
+    }
+
+    function applyStaffFilter() {
+      const v = document.getElementById('f-staff-sel').value;
+      const c = document.getElementById('staff-res'); c.innerHTML = '';
+      if(!v) return;
+      allData.filter(d => d.staff === v)
+             .sort((a,b)=>new Date(b.date)-new Date(a.date))
+             .forEach(item => c.appendChild(createCard(item)));
+    }
+
+    function applyStoreFilter() {
+      const v = document.getElementById('f-store-sel').value;
+      const c = document.getElementById('store-res'); c.innerHTML = '';
+      if(!v) return;
+      allData.filter(d => d.store === v)
+             .sort((a,b)=>new Date(b.date)-new Date(a.date))
+             .forEach(item => c.appendChild(createCard(item)));
+    }
+
+    function initCalendar() {
+      const counts = {}; 
+      allData.forEach(d => { 
+        const s = getIsodate(d.date); 
+        counts[s] = (counts[s] || 0) + 1; 
+      });
+      const events = Object.keys(counts).map(s => ({ title: `${counts[s]}件`, start: s, allDay: true }));
+      
+      calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: 'dayGridMonth', 
+        locale: 'ja', 
+        height: 'auto', 
+        events,
+        dateClick: (info) => { renderList(info.date); switchView('list'); }
+      });
+      calendar.render();
+    }
+
+    function switchView(id) {
+      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('sec-' + id).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('nav-' + id).classList.add('active');
+      if(id === 'cal' && calendar) { 
+        setTimeout(() => calendar.updateSize(), 150); 
+      }
     }
   </script>
 </body>
