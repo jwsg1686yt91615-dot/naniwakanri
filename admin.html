@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
 
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/ami/main/Gemini_Generated_Image_62q3zc62q3zc62q3.png">
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/ami/main/Gemini_Generated_Image_62q3zc62q3zc62q3.png">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png?v=1.1">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png?v=1.1">
 
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
@@ -22,23 +22,32 @@
     body { background-color: var(--bg-black); color: #fff; font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
     .header-area { width: 100%; text-align: center; padding: 25px 0; border-bottom: 1px solid #222; background: #000; }
     .header-img { height: 80px !important; width: auto; max-width: 90%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255, 0, 60, 0.6)); }
+    
+    /* 認証画面 */
     #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .pw-input { padding: 18px; font-size: 24px; width: 80%; max-width: 320px; background: #111; border: 2px solid var(--neon-red); color: #fff; text-align: center; border-radius: 12px; margin-bottom: 25px; outline: none; }
     .pw-btn { padding: 18px 60px; background: var(--neon-red); color: #fff; border: none; border-radius: 40px; font-weight: bold; font-size: 20px; box-shadow: 0 0 20px var(--neon-red); cursor: pointer; }
+    
     #main-content { display: none; padding-bottom: 120px; }
     .container { width: 100%; max-width: 1000px; margin: 0 auto; padding: 15px; box-sizing: border-box; }
     h2 { font-size: 14px; color: var(--neon-red); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 8px var(--neon-red); margin: 20px 0; text-align: center; }
+    
+    /* 履歴カード */
     .history-card { background: var(--card-bg); border-left: 4px solid var(--neon-red); margin-bottom: 15px; padding: 15px; border-radius: 8px; }
     .card-row { display: flex; justify-content: space-between; align-items: center; }
     .store-name { font-size: 18px; font-weight: bold; }
     .time-value { font-size: 20px; color: var(--neon-red); font-weight: bold; }
     .staff-name { font-size: 16px; color: #ccc; margin: 10px 0; }
+    
+    /* 下部ナビゲーション */
     .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
     .nav-item { color: #666; text-align: center; font-size: 11px; flex: 1; cursor: pointer; }
     .nav-item.active { color: var(--neon-red); }
     .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+    
     .view-section { display: none; }
     .view-section.active { display: block; }
+    
     select { width: 100%; max-width: 600px; display: block; margin: 0 auto 20px auto; height: 55px; padding: 0 15px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 12px; font-size: 17px; -webkit-appearance: none; }
   </style>
 </head>
@@ -48,14 +57,36 @@
     <input type="password" id="admin-pw" class="pw-input" placeholder="PASS" inputmode="numeric">
     <button class="pw-btn" onclick="checkAuth()">LOGIN</button>
   </div>
+
   <div id="main-content">
-    <div class="header-area"><img class="header-img" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg"></div>
-    <div class="container">
-      <div id="sec-list" class="view-section active"><h2 id="list-title">Today's Records</h2><div id="list-contents"></div></div>
-      <div id="sec-cal" class="view-section"><h2>Calendar</h2><div id="calendar"></div></div>
-      <div id="sec-staff" class="view-section"><h2>Staff Filter</h2><select id="f-staff-sel" onchange="applyStaffFilter()"></select><div id="staff-res"></div></div>
-      <div id="sec-store" class="view-section"><h2>Store Filter</h2><select id="f-store-sel" onchange="applyStoreFilter()"></select><div id="store-res"></div></div>
+    <div class="header-area">
+      <img class="header-img" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg">
     </div>
+    
+    <div class="container">
+      <div id="sec-list" class="view-section active">
+        <h2 id="list-title">Today's Records</h2>
+        <div id="list-contents"></div>
+      </div>
+      
+      <div id="sec-cal" class="view-section">
+        <h2>Calendar</h2>
+        <div id="calendar"></div>
+      </div>
+      
+      <div id="sec-staff" class="view-section">
+        <h2>Staff Filter</h2>
+        <select id="f-staff-sel" onchange="applyStaffFilter()"></select>
+        <div id="staff-res"></div>
+      </div>
+      
+      <div id="sec-store" class="view-section">
+        <h2>Store Filter</h2>
+        <select id="f-store-sel" onchange="applyStoreFilter()"></select>
+        <div id="store-res"></div>
+      </div>
+    </div>
+
     <div class="nav-bar">
       <div class="nav-item active" id="nav-list" onclick="switchView('list')"><span class="nav-icon">📋</span>履歴</div>
       <div class="nav-item" id="nav-cal" onclick="switchView('cal')"><span class="nav-icon">📅</span>月間</div>
@@ -65,6 +96,7 @@
   </div>
 
   <script>
+    // ★ご自身のGASデプロイURLを貼り付けてください
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec";
     let allData = [];
     let calendar;
@@ -87,6 +119,7 @@
       const pw = pwInput.value.trim();
       const btn = document.querySelector('.pw-btn');
       if(!pw || btn.disabled) return;
+
       btn.disabled = true; btn.innerHTML = "認証中...";
       try {
         const data = await callGas("getHistoryData", { pass: pw });
@@ -100,7 +133,7 @@
           renderList();
           initCalendar();
         }
-      } catch (e) { alert("通信エラー"); btn.disabled = false; }
+      } catch (e) { alert("通信エラー"); btn.disabled = false; btn.innerHTML = "LOGIN"; }
     }
 
     document.getElementById('admin-pw').addEventListener('keypress', e => { if(e.key === 'Enter') checkAuth(); });
@@ -116,9 +149,24 @@
     function createCard(item) {
       const d = new Date(item.date);
       const tS = d.toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
-      const phone = item.phone ? item.phone.toString().replace(/['\s-]/g, '') : "";
+      
+      // 電話番号のクリーニング
+      let rawPhone = item.phone ? String(item.phone) : "";
+      let cleanPhone = rawPhone.replace(/[^0-9]/g, ''); 
+      
       const card = document.createElement('div'); card.className = 'history-card';
-      card.innerHTML = `<div class="card-row"><div class="store-name">${item.store}</div><div class="time-value">${tS}</div></div><div class="staff-name">担当: ${item.staff}</div>${item.notes ? `<div style="font-size:13px; color:#aaa; margin-bottom:10px;">備考: ${item.notes}</div>` : ''}<div class="card-row" style="border-top:1px solid #222; padding-top:10px; margin-top:10px;"><span>📞 ${phone}</span>${phone ? `<a href="tel:${phone}" style="background:var(--neon-red);color:#fff;text-decoration:none;padding:5px 12px;border-radius:10px;font-size:12px;">発信</a>` : ''}</div>`;
+      card.innerHTML = `
+        <div class="card-row">
+          <div class="store-name">${item.store}</div>
+          <div class="time-value">${tS}</div>
+        </div>
+        <div class="staff-name">担当: ${item.staff}</div>
+        ${item.notes ? `<div style="font-size:13px; color:#aaa; margin-bottom:10px;">備考: ${item.notes}</div>` : ''}
+        <div class="card-row" style="border-top:1px solid #222; padding-top:10px; margin-top:10px;">
+          <span>📞 ${rawPhone}</span>
+          ${cleanPhone ? `<a href="tel:${cleanPhone}" style="background:var(--neon-red);color:#fff;text-decoration:none;padding:8px 18px;border-radius:10px;font-size:14px;font-weight:bold;">発信</a>` : ''}
+        </div>
+      `;
       return card;
     }
 
@@ -148,7 +196,13 @@
     function initCalendar() {
       const counts = {}; allData.forEach(d => { const s = getIsodate(d.date); counts[s] = (counts[s] || 0) + 1; });
       const events = Object.keys(counts).map(s => ({ title: `${counts[s]}件`, start: s, allDay: true }));
-      calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'ja', height: 'auto', events, dateClick: (info) => { renderList(info.date); switchView('list'); } });
+      calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { 
+        initialView: 'dayGridMonth', 
+        locale: 'ja', 
+        height: 'auto', 
+        events, 
+        dateClick: (info) => { renderList(info.date); switchView('list'); } 
+      });
       calendar.render();
     }
 
