@@ -4,10 +4,8 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/2e12948bff264ed6035bd078bdf2c2b0e9ad6367/naniwa_icon_v1.png?v=700">
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/2e12948bff264ed6035bd078bdf2c2b0e9ad6367/naniwa_icon_v1.png?v=700">
-  
   <style>
+    /* CSSは変更なしのため省略（以前のコードのものをそのまま使ってください） */
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
     .container { width: 100%; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; padding-bottom: 150px; }
     .header-image { width: 100%; height: auto; min-height: 50px; display: block; margin-bottom: 10px; background-color: #111; }
@@ -30,9 +28,9 @@
   <div class="container">
     <img class="header-image" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg">
     <div class="label">店舗を選択</div>
-    <select id="store"><option value="" disabled selected>選択してください</option></select>
+    <select id="store"><option value="" disabled selected>読み込み中...</option></select>
     <div class="label">担当者を選択</div>
-    <select id="staff"><option value="" disabled selected>選択してください</option></select>
+    <select id="staff"><option value="" disabled selected>読み込み中...</option></select>
     <input id="staffOther" type="text" placeholder="名前を手入力" style="display:none;">
     <div class="label">連絡先（数字のみ）</div>
     <input id="phone" type="tel" placeholder="09012345678" inputmode="tel">
@@ -53,31 +51,42 @@
   <div class="overlay" id="resultOverlay"><div style="font-size:30px; color:red; font-weight:bold;">送信完了</div></div>
 
   <script>
+    // ★ここにあなたのGASウェブアプリURLを貼り付けてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec";
+
     let staffMaster = [];
+
+    // GAS呼び出し用共通関数
+    async function callGas(method, params = {}) {
+      const response = await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ method: method, ...params })
+      });
+      return await response.json();
+    }
+
     function updateTime() { document.getElementById("timestamp").textContent = new Date().toLocaleString('ja-JP'); }
     setInterval(updateTime, 1000); updateTime();
 
-    // プルダウンを再構築する関数
     function refreshUI(data) {
       if(!data || data.error) return;
       const sSel = document.getElementById("store"), fSel = document.getElementById("staff");
-      
-      // 現在の選択を一旦保持
       const currentStore = sSel.value;
-      
-      sSel.innerHTML = '<option value="" disabled selected>選択してください</option>';
+      if (sSel.options.length <= 1) {
+        sSel.innerHTML = '<option value="" disabled selected>選択してください</option>';
+        if(data.stores) data.stores.forEach(s => sSel.add(new Option(s, s)));
+        if(currentStore) sSel.value = currentStore;
+      }
       fSel.innerHTML = '<option value="" disabled selected>選択してください</option>';
-      
-      if(data.stores) data.stores.forEach(s => sSel.add(new Option(s, s)));
       staffMaster = data.staffList || [];
       staffMaster.forEach(s => fSel.add(new Option(s.name, s.name)));
       fSel.add(new Option("その他(入力)", "その他(入力)"));
-      
-      // 店舗だけは選択を戻す
-      if(currentStore) sSel.value = currentStore;
     }
 
-    window.onload = () => google.script.run.withSuccessHandler(refreshUI).getMasterData();
+    window.onload = async () => {
+      const data = await callGas("getMasterData");
+      refreshUI(data);
+    };
 
     document.getElementById("staff").addEventListener("change", e => {
       const other = document.getElementById("staffOther"), phoneInput = document.getElementById("phone");
@@ -91,7 +100,8 @@
     });
 
     document.getElementById("submitBtn").addEventListener("click", () => {
-      const store = document.getElementById("store").value, phone = document.getElementById("phone").value.trim();
+      const store = document.getElementById("store").value;
+      const phone = document.getElementById("phone").value.trim();
       let staff = document.getElementById("staff").value;
       if(staff === "その他(入力)") staff = document.getElementById("staffOther").value.trim();
       if(!store || !staff || !phone) { alert("未入力があります"); return; }
@@ -99,33 +109,40 @@
       document.getElementById("confirmOverlay").style.display = "flex";
     });
 
-    document.getElementById("finalSubmit").addEventListener("click", function() {
-      const btn = this; if(btn.disabled) return;
+    document.getElementById("finalSubmit").addEventListener("click", async function() {
+      const btn = this; 
+      if(btn.disabled || btn.innerHTML === "送信中...") return;
       btn.disabled = true; btn.innerHTML = "送信中...";
-      const store = document.getElementById("store").value, phone = document.getElementById("phone").value.trim(), notes = document.getElementById("notes").value.trim();
+      
+      const store = document.getElementById("store").value;
+      const phone = document.getElementById("phone").value.trim();
+      const notes = document.getElementById("notes").value.trim();
       let staff = document.getElementById("staff").value;
       if(staff === "その他(入力)") staff = document.getElementById("staffOther").value.trim();
       
-      google.script.run.withSuccessHandler((res) => {
+      try {
+        const res = await callGas("submitData", { data: {store, staff, phone, notes} });
         if (res.success) {
           document.getElementById("confirmOverlay").style.display = "none";
           document.getElementById("resultOverlay").style.display = "flex";
           setTimeout(() => {
             document.getElementById("resultOverlay").style.display = "none";
-            // 入力欄をクリア
             document.getElementById("staffOther").value = ""; 
             document.getElementById("staffOther").style.display = "none";
             document.getElementById("phone").value = ""; 
             document.getElementById("notes").value = "";
             document.getElementById("staff").selectedIndex = 0;
-            
-            // 重要：ここで最新のマスタ（新しく登録された名前を含む）を読み込み直す
             if(res.newData) refreshUI(res.newData);
-            
             btn.disabled = false; btn.innerHTML = "OK";
           }, 2000);
-        } else { alert("エラー: " + res.error); btn.disabled = false; btn.innerHTML = "OK"; }
-      }).submitData({store, staff, phone, notes});
+        } else {
+          alert("エラー: " + res.error);
+          btn.disabled = false; btn.innerHTML = "OK";
+        }
+      } catch (e) {
+        alert("通信エラーが発生しました");
+        btn.disabled = false; btn.innerHTML = "OK";
+      }
     });
   </script>
 </body>
