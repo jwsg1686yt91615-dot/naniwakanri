@@ -11,12 +11,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
 
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/ami/main/Gemini_Generated_Image_62q3zc62q3zc62q3.png">
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/ami/main/Gemini_Generated_Image_62q3zc62q3zc62q3.png">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png">
   
   <style>
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
     
+    /* コンテナ：PCでは広く、スマホでは適切に */
     .container { 
       width: 100%; 
       max-width: 1000px; 
@@ -29,6 +30,7 @@
 
     .header-image { width: 100%; max-width: 500px; height: auto; min-height: 50px; display: block; margin-bottom: 20px; background-color: #111; }
 
+    /* 入力パーツの基本スタイル */
     select, input, textarea, .btn { 
       display: block; 
       width: 90%; 
@@ -46,13 +48,34 @@
     }
 
     .label { width: 90%; max-width: 600px; text-align: left; font-size: 14px; color: #aaa; margin-top: 12px; font-weight: bold; }
+    
+    /* セレクトボックスの矢印 */
     select { height: 60px; background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'); background-repeat: no-repeat; background-position: right 15px center; background-size: 20px; }
+    
     textarea { height: 120px; resize: vertical; }
+
+    /* ボタン共通 */
     .btn { font-size: 22px; font-weight: bold; border: none; cursor: pointer; text-align: center; justify-content: center; display: flex; align-items: center; }
+
+    /* 出庫ボタン（赤） */
     #submitBtn { background: linear-gradient(135deg, #ff0000 0%, #990000 100%); margin-top: 20px; }
     #submitBtn:disabled { background: #555 !important; opacity: 0.6; }
+
+    /* 連絡ボタン（白・グレー） */
+    #callBtn { 
+      background: #f0f0f0; 
+      color: #000; 
+      text-decoration: none; 
+      margin-top: 5px; 
+      font-size: 18px; 
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      border: none;
+    }
+    #callBtn:active { background: #cccccc; }
+
     .timestamp { margin: 15px 0; font-size: 20px; color: #ccc; font-weight: bold; }
     
+    /* ポップアップ */
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
     .confirm-box { width: 85%; max-width: 400px; background: #222; padding: 20px; border-radius: 20px; border: 2px solid red; }
     .btn-row { display: flex; gap: 10px; margin-top: 20px; }
@@ -64,17 +87,25 @@
 <body>
   <div class="container">
     <img class="header-image" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg">
+    
     <div class="label">店舗を選択</div>
     <select id="store"><option value="" disabled selected>読み込み中...</option></select>
+    
     <div class="label">担当者を選択</div>
     <select id="staff"><option value="" disabled selected>読み込み中...</option></select>
     <input id="staffOther" type="text" placeholder="名前を手入力" style="display:none;">
-    <div class="label">連絡先</div>
+    
+    <div class="label">連絡先（店舗/ドライバー）</div>
     <input id="phone" type="tel" placeholder="09012345678" inputmode="tel">
+    
     <div class="label">備考</div>
     <textarea id="notes" placeholder="伝達事項があれば記入"></textarea>
+    
     <div class="timestamp" id="timestamp">--:--:--</div>
+    
     <button id="submitBtn" class="btn">出庫を記録する</button>
+    
+    <a href="#" id="callBtn" class="btn">倉庫管理者に連絡する</a>
   </div>
 
   <div class="overlay" id="confirmOverlay"><div class="confirm-box">
@@ -85,59 +116,89 @@
       <button class="btn-yes" id="finalSubmit">OK</button>
     </div>
   </div></div>
+
   <div class="overlay" id="resultOverlay"><div style="font-size:30px; color:red; font-weight:bold;">送信完了</div></div>
 
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec";
+    const ADMIN_PHONE = "08023654169"; // 管理者の番号（数字のみ）
 
     let staffMaster = [];
+
+    // GAS通信
     async function callGas(method, params = {}) {
-      const response = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method, ...params }) });
+      const response = await fetch(GAS_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ method: method, ...params }) 
+      });
       return await response.json();
     }
 
-    function updateTime() { document.getElementById("timestamp").textContent = new Date().toLocaleString('ja-JP'); }
-    setInterval(updateTime, 1000); updateTime();
+    // 時計更新
+    function updateTime() { 
+      document.getElementById("timestamp").textContent = new Date().toLocaleString('ja-JP'); 
+    }
+    setInterval(updateTime, 1000); 
+    updateTime();
 
+    // 初期化
     async function init() {
+      // 連絡先ボタンのリンク設定
+      const cBtn = document.getElementById("callBtn");
+      cBtn.href = "tel:" + ADMIN_PHONE.replace(/[^0-9]/g, '');
+      
       try {
         const data = await callGas("getMasterData");
         if(data) refreshUI(data);
-      } catch (e) { console.error(e); }
+      } catch (e) { console.error("データ読み込み失敗:", e); }
     }
 
+    // UI更新（マスタデータ反映）
     function refreshUI(data) {
       const sSel = document.getElementById("store"), fSel = document.getElementById("staff");
+      
       sSel.innerHTML = '<option value="" disabled selected>選択してください</option>';
       if(data.stores) data.stores.forEach(s => sSel.add(new Option(s, s)));
+      
       fSel.innerHTML = '<option value="" disabled selected>選択してください</option>';
       staffMaster = data.staffList || [];
       staffMaster.forEach(s => fSel.add(new Option(s.name, s.name)));
       fSel.add(new Option("その他(入力)", "その他(入力)"));
     }
 
+    // 担当者選択時の連動
     document.getElementById("staff").addEventListener("change", e => {
       const other = document.getElementById("staffOther"), p = document.getElementById("phone");
-      if (e.target.value === "その他(入力)") { other.style.display = "block"; p.value = ""; }
-      else {
+      if (e.target.value === "その他(入力)") { 
+        other.style.display = "block"; 
+        p.value = ""; 
+      } else {
         other.style.display = "none";
         const info = staffMaster.find(s => s.name === e.target.value);
         p.value = info ? info.phone.replace(/['\s-]/g, '') : "";
       }
     });
 
+    // 送信確認ボタン
     document.getElementById("submitBtn").addEventListener("click", () => {
       const store = document.getElementById("store").value;
       let staff = document.getElementById("staff").value;
       if(staff === "その他(入力)") staff = document.getElementById("staffOther").value;
       const phone = document.getElementById("phone").value;
-      if(!store || !staff || !phone) { alert("未入力があります"); return; }
+      
+      if(!store || !staff || !phone) { alert("未入力項目があります"); return; }
+      
       document.getElementById("confirmContent").innerHTML = `店舗: ${store}<br>担当: ${staff}<br>電話: ${phone}`;
       document.getElementById("confirmOverlay").style.display = "flex";
     });
 
+    // 最終送信
     document.getElementById("finalSubmit").addEventListener("click", async function() {
-      this.disabled = true; this.innerHTML = "送信中...";
+      const btn = this;
+      if(btn.disabled) return;
+      btn.disabled = true; 
+      btn.innerHTML = "送信中...";
+      
       const store = document.getElementById("store").value;
       const notes = document.getElementById("notes").value;
       const phone = document.getElementById("phone").value;
@@ -150,9 +211,16 @@
           document.getElementById("confirmOverlay").style.display = "none";
           document.getElementById("resultOverlay").style.display = "flex";
           setTimeout(() => location.reload(), 2000);
+        } else {
+          alert("エラー: " + res.error);
+          btn.disabled = false; btn.innerHTML = "OK";
         }
-      } catch (e) { alert("送信エラー"); this.disabled = false; }
+      } catch (e) { 
+        alert("送信に失敗しました"); 
+        btn.disabled = false; btn.innerHTML = "OK"; 
+      }
     });
+
     window.onload = init;
   </script>
 </body>
