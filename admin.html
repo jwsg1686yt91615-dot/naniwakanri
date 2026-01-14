@@ -4,71 +4,31 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jwsg1686yt91615-dot/icon/main/naniwa_icon_v1.png?v=700">
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
   <style>
     :root { --neon-red: #ff003c; --bg-black: #050505; --card-bg: #111; }
     body { background-color: var(--bg-black); color: #fff; font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-    
     .header-area { width: 100%; text-align: center; padding: 25px 0; border-bottom: 1px solid #222; background: #000; }
-    .header-img { 
-      height: 80px !important; 
-      width: auto; 
-      max-width: 90%;
-      object-fit: contain;
-      filter: drop-shadow(0 0 10px rgba(255, 0, 60, 0.6)); 
-    }
-    
+    .header-img { height: 80px !important; width: auto; max-width: 90%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255, 0, 60, 0.6)); }
     #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .pw-input { padding: 18px; font-size: 24px; width: 80%; max-width: 320px; background: #111; border: 2px solid var(--neon-red); color: #fff; text-align: center; border-radius: 12px; margin-bottom: 25px; outline: none; }
     .pw-btn { padding: 18px 60px; background: var(--neon-red); color: #fff; border: none; border-radius: 40px; font-weight: bold; font-size: 20px; box-shadow: 0 0 20px var(--neon-red); cursor: pointer; }
-    
     #main-content { display: none; padding-bottom: 120px; }
-    
-    /* PC・スマホ両対応のコンテナ */
-    .container { 
-      width: 100%; 
-      max-width: 1000px; 
-      margin: 0 auto; 
-      padding: 15px; 
-      box-sizing: border-box;
-    }
-
+    .container { width: 100%; max-width: 1000px; margin: 0 auto; padding: 15px; box-sizing: border-box; }
     h2 { font-size: 14px; color: var(--neon-red); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 8px var(--neon-red); margin: 20px 0; text-align: center; }
-    
     .history-card { background: var(--card-bg); border-left: 4px solid var(--neon-red); margin-bottom: 15px; padding: 15px; border-radius: 8px; }
     .card-row { display: flex; justify-content: space-between; align-items: center; }
     .store-name { font-size: 18px; font-weight: bold; }
     .time-value { font-size: 20px; color: var(--neon-red); font-weight: bold; }
     .staff-name { font-size: 16px; color: #ccc; margin: 10px 0; }
-    
     .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
     .nav-item { color: #666; text-align: center; font-size: 11px; flex: 1; cursor: pointer; }
     .nav-item.active { color: var(--neon-red); }
     .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; }
-    
     .view-section { display: none; }
     .view-section.active { display: block; }
-    
-    select { 
-      width: 100%; 
-      max-width: 600px;
-      display: block;
-      margin: 0 auto 20px auto;
-      height: 55px; 
-      padding: 0 15px; 
-      background: #1a1a1a; 
-      color: #fff; 
-      border: 1px solid #333; 
-      border-radius: 12px; 
-      font-size: 17px; 
-      -webkit-appearance: none; 
-    }
-
-    /* カレンダーの背景色調整 */
-    #calendar { background: #111; padding: 10px; border-radius: 10px; color: #fff; }
-    .fc-header-toolbar { color: #fff; }
+    select { width: 100%; max-width: 600px; display: block; margin: 0 auto 20px auto; height: 55px; padding: 0 15px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 12px; font-size: 17px; -webkit-appearance: none; }
   </style>
 </head>
 <body>
@@ -77,33 +37,14 @@
     <input type="password" id="admin-pw" class="pw-input" placeholder="PASS" inputmode="numeric">
     <button class="pw-btn" onclick="checkAuth()">LOGIN</button>
   </div>
-
   <div id="main-content">
     <div class="header-area"><img class="header-img" src="https://raw.githubusercontent.com/jwsg1686yt91615-dot/naniwasan/main/head_logo.jpg"></div>
     <div class="container">
-      <div id="sec-list" class="view-section active">
-        <h2 id="list-title">Today's Records</h2>
-        <div id="list-contents"></div>
-      </div>
-      
-      <div id="sec-cal" class="view-section">
-        <h2>Calendar</h2>
-        <div id="calendar"></div>
-      </div>
-      
-      <div id="sec-staff" class="view-section">
-        <h2>Staff Filter</h2>
-        <select id="f-staff-sel" onchange="applyStaffFilter()"></select>
-        <div id="staff-res"></div>
-      </div>
-      
-      <div id="sec-store" class="view-section">
-        <h2>Store Filter</h2>
-        <select id="f-store-sel" onchange="applyStoreFilter()"></select>
-        <div id="store-res"></div>
-      </div>
+      <div id="sec-list" class="view-section active"><h2 id="list-title">Today's Records</h2><div id="list-contents"></div></div>
+      <div id="sec-cal" class="view-section"><h2>Calendar</h2><div id="calendar"></div></div>
+      <div id="sec-staff" class="view-section"><h2>Staff Filter</h2><select id="f-staff-sel" onchange="applyStaffFilter()"></select><div id="staff-res"></div></div>
+      <div id="sec-store" class="view-section"><h2>Store Filter</h2><select id="f-store-sel" onchange="applyStoreFilter()"></select><div id="store-res"></div></div>
     </div>
-
     <div class="nav-bar">
       <div class="nav-item active" id="nav-list" onclick="switchView('list')"><span class="nav-icon">📋</span>履歴</div>
       <div class="nav-item" id="nav-cal" onclick="switchView('cal')"><span class="nav-icon">📅</span>月間</div>
@@ -113,32 +54,28 @@
   </div>
 
   <script>
-    // ★ここにあなたのGASウェブアプリURLを貼り付けてください
+    // ★ここにご自身のGASウェブアプリURLを貼り付けてください
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyU69mcLTIQ8b5-PJMjC_g8pyhTSMooBt9TB1Y-59agVhHbUJ59soBsgOoPgThqffAM-Q/exec";
 
     let allData = [];
     let calendar;
 
-    // API通信用関数
     async function callGas(method, params = {}) {
       const response = await fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({ method: method, ...params })
       });
-      if (!response.ok) throw new Error('通信エラーが発生しました');
       return await response.json();
     }
 
-    // 日付フォーマット関数
     function getIsodate(dateObj) {
       const d = new Date(dateObj);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    // 認証処理
     async function checkAuth() {
       const pwInput = document.getElementById('admin-pw');
-      const pw = pwInput.value.trim(); // スペースを削除
+      const pw = pwInput.value.trim();
       const btn = document.querySelector('.pw-btn');
       
       if(!pw) { alert("パスワードを入力してください"); return; }
@@ -148,12 +85,12 @@
       btn.innerHTML = "認証中...";
       
       try {
+        // キーを「pass」にして送信
         const data = await callGas("getHistoryData", { pass: pw });
         
         if (data === "AUTH_FAILED") {
           alert("認証失敗：パスワードが違います"); 
-          btn.disabled = false; 
-          btn.innerHTML = "LOGIN";
+          btn.disabled = false; btn.innerHTML = "LOGIN";
           pwInput.value = "";
         } else if (data && typeof data === 'object') {
           allData = data.history || [];
@@ -164,17 +101,12 @@
           initCalendar();
         }
       } catch (e) {
-        console.error(e);
-        alert("サーバー通信エラー。GASのURLと公開設定を確認してください。");
-        btn.disabled = false; 
-        btn.innerHTML = "LOGIN";
+        alert("サーバー通信エラー。GASのデプロイ設定を確認してください。");
+        btn.disabled = false; btn.innerHTML = "LOGIN";
       }
     }
 
-    // Enterキーでもログイン可能に
-    document.getElementById('admin-pw').addEventListener('keypress', e => { 
-      if(e.key === 'Enter') checkAuth(); 
-    });
+    document.getElementById('admin-pw').addEventListener('keypress', e => { if(e.key === 'Enter') checkAuth(); });
 
     function setupFilters(stores, staffList) {
       const sS = document.getElementById('f-store-sel'), fS = document.getElementById('f-staff-sel');
